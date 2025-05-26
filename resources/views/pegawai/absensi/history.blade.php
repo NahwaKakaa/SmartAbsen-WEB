@@ -4,14 +4,14 @@
 <div class="container py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h3 class="mb-0 fw-bold"><i class="bi bi-journal-text me-2"></i>Riwayat Absensi Pegawai</h3>
-        <a href="{{ route('pegawai.absensi.download', request()->all()) }}" class="btn btn-success btn-sm rounded-pill shadow-sm"> {{-- btn-sm untuk ukuran lebih kecil --}}
+        <a href="{{ route('pegawai.absensi.download', request()->all()) }}" class="btn btn-success btn-sm rounded-pill shadow-sm">
             <i class="bi bi-file-earmark-arrow-down-fill me-2"></i>Unduh PDF
         </a>
     </div>
 
     {{-- Filter Form --}}
     <div class="card shadow-sm mb-4">
-        <div class="card-header bg-light py-3"> {{-- Gunakan bg-light agar adaptif melalui CSS kustom --}}
+        <div class="card-header bg-light py-3">
             <h5 class="mb-0 fw-bold"><i class="bi bi-funnel-fill me-2"></i>Filter Riwayat</h5>
         </div>
         <div class="card-body">
@@ -33,8 +33,8 @@
     </div>
 
     {{-- Tabel Riwayat Absensi --}}
-    <div class="card shadow-lg"> {{-- shadow-lg untuk card --}}
-        <div class="card-body p-0"> {{-- Hapus padding default card-body untuk tabel --}}
+    <div class="card shadow-lg">
+        <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-bordered table-striped table-hover mb-0 align-middle">
                     <thead>
@@ -65,8 +65,9 @@
                             </td>
                             <td class="text-center">
                                 @if($absen->foto_datang)
-                                    <a href="{{ asset('uploads/absensi/' . $absen->foto_datang) }}" target="_blank">
-                                        <img src="{{ asset('uploads/absensi/' . $absen->foto_datang) }}" alt="Foto Datang" width="60" class="img-thumbnail rounded shadow-sm">
+                                    {{-- PERBAIKAN DI SINI: Tambahkan 'storage/' --}}
+                                    <a href="{{ asset('storage/' . $absen->foto_datang) }}" target="_blank">
+                                        <img src="{{ asset('storage/' . $absen->foto_datang) }}" alt="Foto Datang" width="60" class="img-thumbnail rounded shadow-sm">
                                     </a>
                                 @else
                                     <span class="text-muted">-</span>
@@ -74,8 +75,9 @@
                             </td>
                             <td class="text-center">
                                 @if($absen->foto_pulang)
-                                    <a href="{{ asset('uploads/absensi/' . $absen->foto_pulang) }}" target="_blank">
-                                        <img src="{{ asset('uploads/absensi/' . $absen->foto_pulang) }}" alt="Foto Pulang" width="60" class="img-thumbnail rounded shadow-sm">
+                                    {{-- PERBAIKAN DI SINI: Tambahkan 'storage/' --}}
+                                    <a href="{{ asset('storage/' . $absen->foto_pulang) }}" target="_blank">
+                                        <img src="{{ asset('storage/' . $absen->foto_pulang) }}" alt="Foto Pulang" width="60" class="img-thumbnail rounded shadow-sm">
                                     </a>
                                 @else
                                     <span class="text-muted">-</span>

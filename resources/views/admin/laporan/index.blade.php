@@ -75,8 +75,8 @@
                             <td>{{ $absen->kegiatan ?? '-' }}</td>
                             <td class="text-center">
                                 @if($absen->foto_datang)
-                                    <a href="{{ asset('uploads/absensi/' . $absen->foto_datang) }}" target="_blank">
-                                        <img src="{{ asset('uploads/absensi/' . $absen->foto_datang) }}" alt="Foto Datang" width="60" class="img-thumbnail rounded shadow-sm">
+                                    <a href="{{ asset('storage/' . $absen->foto_datang) }}" target="_blank">
+                                        <img src="{{ asset('storage/' . $absen->foto_datang) }}" alt="Foto Datang" width="60" class="img-thumbnail rounded shadow-sm">
                                     </a>
                                 @else
                                     <span class="text-muted">-</span>
@@ -84,8 +84,8 @@
                             </td>
                             <td class="text-center">
                                 @if($absen->foto_pulang)
-                                    <a href="{{ asset('uploads/absensi/' . $absen->foto_pulang) }}" target="_blank">
-                                        <img src="{{ asset('uploads/absensi/' . $absen->foto_pulang) }}" alt="Foto Pulang" width="60" class="img-thumbnail rounded shadow-sm">
+                                    <a href="{{ asset('storage/' . $absen->foto_pulang) }}" target="_blank">
+                                        <img src="{{ asset('storage/' . $absen->foto_pulang) }}" alt="Foto Pulang" width="60" class="img-thumbnail rounded shadow-sm">
                                     </a>
                                 @else
                                     <span class="text-muted">-</span>

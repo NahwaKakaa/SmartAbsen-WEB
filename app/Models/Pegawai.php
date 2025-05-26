@@ -16,6 +16,10 @@ class Pegawai extends Authenticatable
 
     protected $hidden = ['password'];
 
+    protected $casts = [
+        'password' => 'hashed',
+    ];
+
     public function jabatan()
     {
         return $this->belongsTo(Jabatan::class);

@@ -36,7 +36,6 @@
         </div>
     </div>
 
-    {{-- Profile Update Form (Menggunakan Alpine.js) --}}
     <div x-show="showProfileForm" x-transition:enter="animate__animated animate__fadeIn" x-transition:leave="animate__animated animate__fadeOut" class="card shadow-lg mb-4">
         <div class="card-header bg-primary text-white py-3">
             <h5 class="mb-0 fw-bold"><i class="bi bi-pencil-fill me-2"></i>Ubah Profil</h5>
@@ -71,14 +70,13 @@
                 </div>
 
                 <div class="d-flex gap-2 justify-content-end mt-4">
-                    <button type="submit" class="btn btn-success btn-sm shadow-sm"><i class="bi bi-save-fill me-2"></i>Simpan Perubahan</button> {{-- btn-lg diubah ke btn-sm --}}
-                    <button type="button" class="btn btn-secondary btn-sm shadow-sm" @click="showProfileForm = false"><i class="bi bi-x-circle-fill me-2"></i>Batal</button> {{-- btn-lg diubah ke btn-sm --}}
+                    <button type="submit" class="btn btn-success btn-sm shadow-sm"><i class="bi bi-save-fill me-2"></i>Simpan Perubahan</button>
+                    <button type="button" class="btn btn-secondary btn-sm shadow-sm" @click="showProfileForm = false"><i class="bi bi-x-circle-fill me-2"></i>Batal</button>
                 </div>
             </form>
         </div>
     </div>
 
-    {{-- Password Change Form (Menggunakan Alpine.js) --}}
     <div x-show="showPasswordForm" x-transition:enter="animate__animated animate__fadeIn" x-transition:leave="animate__animated animate__fadeOut" class="card shadow-lg">
         <div class="card-header bg-primary text-white py-3">
             <h5 class="mb-0 fw-bold"><i class="bi bi-lock-fill me-2"></i>Ubah Password</h5>
@@ -88,32 +86,32 @@
                 @csrf
 
                 <div class="mb-3">
-                    <label for="old_password" class="form-label fw-semibold">Password Lama <span class="text-danger">*</span></label>
-                    <input type="password" name="old_password" id="old_password" class="form-control" required>
-                    @error('old_password')
+                    <label for="password_lama" class="form-label fw-semibold">Password Lama <span class="text-danger">*</span></label>
+                    <input type="password" name="password_lama" id="password_lama" class="form-control" required>
+                    @error('password_lama')
                         <div class="text-danger small mt-1">{{ $message }}</div>
                     @enderror
                 </div>
 
                 <div class="mb-3">
-                    <label for="new_password" class="form-label fw-semibold">Password Baru <span class="text-danger">*</span></label>
-                    <input type="password" name="new_password" id="new_password" class="form-control" required>
-                    @error('new_password')
+                    <label for="password_baru" class="form-label fw-semibold">Password Baru <span class="text-danger">*</span></label>
+                    <input type="password" name="password_baru" id="password_baru" class="form-control" required>
+                    @error('password_baru')
                         <div class="text-danger small mt-1">{{ $message }}</div>
                     @enderror
                 </div>
 
                 <div class="mb-3">
-                    <label for="new_password_confirmation" class="form-label fw-semibold">Konfirmasi Password Baru <span class="text-danger">*</span></label>
-                    <input type="password" name="new_password_confirmation" id="new_password_confirmation" class="form-control" required>
-                    @error('new_password_confirmation')
+                    <label for="password_baru_confirmation" class="form-label fw-semibold">Konfirmasi Password Baru <span class="text-danger">*</span></label>
+                    <input type="password" name="password_baru_confirmation" id="password_baru_confirmation" class="form-control" required>
+                    @error('password_baru_confirmation')
                         <div class="text-danger small mt-1">{{ $message }}</div>
                     @enderror
                 </div>
 
                 <div class="d-flex gap-2 justify-content-end mt-4">
-                    <button type="submit" class="btn btn-warning btn-sm shadow-sm"><i class="bi bi-arrow-repeat me-2"></i>Ubah Password</button> {{-- btn-lg diubah ke btn-sm --}}
-                    <button type="button" class="btn btn-secondary btn-sm shadow-sm" @click="showPasswordForm = false"><i class="bi bi-x-circle-fill me-2"></i>Batal</button> {{-- btn-lg diubah ke btn-sm --}}
+                    <button type="submit" class="btn btn-warning btn-sm shadow-sm"><i class="bi bi-arrow-repeat me-2"></i>Ubah Password</button>
+                    <button type="button" class="btn btn-secondary btn-sm shadow-sm" @click="showPasswordForm = false"><i class="bi bi-x-circle-fill me-2"></i>Batal</button>
                 </div>
             </form>
         </div>

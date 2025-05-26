@@ -6,14 +6,11 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('log_aktivitas', function (Blueprint $table) {
             $table->id();
-            $table->string('user_type'); // admin / pegawai
+            $table->string('user_type');
             $table->unsignedBigInteger('user_id');
             $table->string('aktivitas');
             $table->ipAddress('ip_address')->nullable();
@@ -22,10 +19,6 @@ return new class extends Migration
         });
     }
 
-
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('log_aktivitas');

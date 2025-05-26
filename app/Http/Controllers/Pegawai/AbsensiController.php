@@ -5,63 +5,40 @@ namespace App\Http\Controllers\Pegawai;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Absensi; // Asumsi Anda memiliki model Absensi
-use Carbon\Carbon; // Untuk bekerja dengan tanggal dan waktu
-use Illuminate\Support\Facades\Storage; // Untuk upload file
+use App\Models\Absensi;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 class AbsensiController extends Controller
 {
-    /**
-     * Menampilkan halaman absensi.
-     *
-     * @return \Illuminate\View\View
-     */
     public function index()
     {
-        // Mendapatkan pegawai yang sedang login
         $pegawai = Auth::guard('pegawai')->user();
         
-        // Cek apakah pegawai sudah absen datang hari ini
         $absensiHariIni = Absensi::where('pegawai_id', $pegawai->id)
                                 ->whereDate('tanggal', Carbon::today())
                                 ->first();
 
-        // Tentukan status tombol absensi
         $sudahDatang = $absensiHariIni && $absensiHariIni->jam_datang !== null;
         $sudahPulang = $absensiHariIni && $absensiHariIni->jam_pulang !== null;
 
         return view('pegawai.absensi.index', compact('sudahDatang', 'sudahPulang'));
     }
 
-    /**
-     * Memproses absensi datang.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\RedirectResponse
-     */
     public function datang(Request $request)
     {
         $pegawai = Auth::guard('pegawai')->user();
         $today = Carbon::today();
+        $jamSekarang = Carbon::now();
 
-        // Validasi input
+        $jamMasukBatas = Carbon::createFromTime(8, 0, 0);
+
         $request->validate([
-            'foto_datang' => 'required|image|mimes:jpeg,png,jpg|max:2048', // Maks 2MB
-            // Hapus validasi kegiatan_datang
-            // 'kegiatan_datang' => 'nullable|string|max:255',
+            'foto_datang' => 'required|image|mimes:jpeg,png,jpg|max:40960',
         ]);
 
         try {
-            // Cek apakah pegawai sudah absen datang hari ini
-            $absensiHariIni = Absensi::where('pegawai_id', $pegawai->id)
-                                    ->whereDate('tanggal', $today)
-                                    ->first();
-
-            if ($absensiHariIni && $absensiHariIni->jam_datang !== null) {
-                return redirect()->back()->with('error', 'Anda sudah melakukan absensi datang hari ini.');
-            }
-
-            // Proses upload foto datang
             $fotoDatangPath = null;
             if ($request->hasFile('foto_datang')) {
                 $fotoDatangPath = $request->file('foto_datang')->store('uploads/absensi', 'public');
@@ -69,58 +46,40 @@ class AbsensiController extends Controller
                 return redirect()->back()->with('error', 'Foto bukti datang wajib diunggah.');
             }
 
-            // Simpan absensi datang
+            $statusAbsensi = ($jamSekarang->greaterThan($jamMasukBatas)) ? 'Terlambat' : 'Tepat Waktu';
+
             Absensi::create([
                 'pegawai_id' => $pegawai->id,
                 'tanggal' => $today,
-                'jam_datang' => Carbon::now()->format('H:i:s'),
-                'status' => 'Tepat Waktu', // Sesuaikan logika status jika ada aturan jam masuk
-                // Hapus penyimpanan kegiatan_datang di sini
-                // 'kegiatan' => $request->kegiatan_datang, // Ini akan diisi saat absen pulang
+                'jam_datang' => $jamSekarang->format('H:i:s'),
+                'status' => $statusAbsensi,
                 'foto_datang' => $fotoDatangPath,
             ]);
 
-            return redirect()->back()->with('success', 'Absensi datang berhasil dicatat!');
+            return redirect()->back()->with('success', 'Absensi datang berhasil dicatat! Status: ' . $statusAbsensi);
 
         } catch (\Exception $e) {
-            // Tangkap error dan tampilkan pesan
-            \Log::error('Error saat absensi datang: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Terjadi kesalahan saat mencatat absensi datang. Silakan coba lagi. (' . $e->getMessage() . ')');
+            Log::error('Error saat absensi datang untuk pegawai ID ' . $pegawai->id . ': ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Terjadi kesalahan saat mencatat absensi datang. Silakan coba lagi. Detail: ' . $e->getMessage());
         }
     }
 
-    /**
-     * Memproses absensi pulang.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\RedirectResponse
-     */
     public function pulang(Request $request)
     {
         $pegawai = Auth::guard('pegawai')->user();
         $today = Carbon::today();
+        $jamSekarang = Carbon::now();
 
-        // Validasi input
         $request->validate([
-            'foto_pulang' => 'required|image|mimes:jpeg,png,jpg|max:2048', // Maks 2MB
-            'kegiatan_pulang' => 'required|string|max:500', // Kegiatan pulang tetap wajib
+            'foto_pulang' => 'required|image|mimes:jpeg,png,jpg|max:40960',
+            'kegiatan_pulang' => 'required|string|max:500',
         ]);
 
         try {
-            // Cek absensi datang hari ini dan pastikan belum pulang
             $absensiHariIni = Absensi::where('pegawai_id', $pegawai->id)
                                     ->whereDate('tanggal', $today)
                                     ->first();
-
-            if (!$absensiHariIni || $absensiHariIni->jam_datang === null) {
-                return redirect()->back()->with('error', 'Anda belum melakukan absensi datang hari ini.');
-            }
-
-            if ($absensiHariIni->jam_pulang !== null) {
-                return redirect()->back()->with('error', 'Anda sudah melakukan absensi pulang hari ini.');
-            }
-
-            // Proses upload foto pulang
+            
             $fotoPulangPath = null;
             if ($request->hasFile('foto_pulang')) {
                 $fotoPulangPath = $request->file('foto_pulang')->store('uploads/absensi', 'public');
@@ -128,34 +87,28 @@ class AbsensiController extends Controller
                 return redirect()->back()->with('error', 'Foto bukti pulang wajib diunggah.');
             }
 
-            // Update absensi pulang
-            $absensiHariIni->update([
-                'jam_pulang' => Carbon::now()->format('H:i:s'),
-                'kegiatan' => $request->kegiatan_pulang, // Kegiatan diisi saat pulang
-                'foto_pulang' => $fotoPulangPath,
-            ]);
-
-            return redirect()->back()->with('success', 'Absensi pulang berhasil dicatat!');
+            if ($absensiHariIni) {
+                $absensiHariIni->update([
+                    'jam_pulang' => $jamSekarang->format('H:i:s'),
+                    'kegiatan' => $request->kegiatan_pulang,
+                    'foto_pulang' => $fotoPulangPath,
+                ]);
+                return redirect()->back()->with('success', 'Absensi pulang berhasil dicatat!');
+            } else {
+                return redirect()->back()->with('error', 'Absensi datang hari ini tidak ditemukan untuk dicatat pulangnya.');
+            }
 
         } catch (\Exception $e) {
-            // Tangkap error dan tampilkan pesan
-            \Log::error('Error saat absensi pulang: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Terjadi kesalahan saat mencatat absensi pulang. Silakan coba lagi. (' . $e->getMessage() . ')');
+            Log::error('Error saat absensi pulang untuk pegawai ID ' . $pegawai->id . ': ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Terjadi kesalahan saat mencatat absensi pulang. Silakan coba lagi. Detail: ' . $e->getMessage());
         }
     }
 
-    /**
-     * Menampilkan riwayat absensi pegawai.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\View\View
-     */
     public function history(Request $request)
     {
         $pegawai = Auth::guard('pegawai')->user();
         $query = Absensi::where('pegawai_id', $pegawai->id);
 
-        // Filter berdasarkan tanggal jika ada
         $tanggal_awal = $request->input('tanggal_awal');
         $tanggal_akhir = $request->input('tanggal_akhir');
 
