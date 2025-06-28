@@ -4,8 +4,8 @@
     <title>Laporan Absensi Pegawai</title>
     <style>
         body {
-            font-family: 'Inter', sans-serif; /* Menggunakan Inter jika tersedia */
-            font-size: 11px; /* Ukuran font sedikit lebih kecil agar muat */
+            font-family: 'Inter', sans-serif;
+            font-size: 11px;
             line-height: 1.5;
             color: #333;
             margin: 0;
@@ -17,7 +17,7 @@
         }
         .header h1 {
             font-size: 24px;
-            color: #0d6efd; /* Warna biru Bootstrap primary */
+            color: #0d6efd;
             margin-bottom: 5px;
         }
         .header p {
@@ -43,27 +43,27 @@
             border-collapse: collapse;
             margin-top: 20px;
             margin-bottom: 20px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Sedikit bayangan pada tabel */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
         th, td {
             border: 1px solid #ddd;
-            padding: 8px 10px; /* Padding lebih besar */
+            padding: 8px 10px;
             text-align: left;
             vertical-align: top;
         }
         th {
-            background-color: #e9ecef; /* Latar belakang header tabel */
+            background-color: #e9ecef;
             color: #333;
             font-weight: bold;
             text-align: center;
             font-size: 11px;
-            text-transform: uppercase; /* Huruf kapital */
+            text-transform: uppercase;
         }
         tbody tr:nth-child(even) {
-            background-color: #f8f8f8; /* Warna baris ganjil */
+            background-color: #f8f8f8;
         }
         tbody tr:hover {
-            background-color: #e0e0e0; /* Efek hover ringan */
+            background-color: #e0e0e0;
         }
         .text-center { text-align: center; }
         .text-left { text-align: left; }
@@ -74,15 +74,15 @@
             font-size: 10px;
             font-weight: bold;
             line-height: 1;
-            border-radius: 12px; /* Lebih membulat */
+            border-radius: 12px;
             color: #fff;
             text-align: center;
             white-space: nowrap;
         }
-        .badge-success { background-color: #198754; } /* Bootstrap success */
-        .badge-warning { background-color: #ffc107; color: #212529; } /* Bootstrap warning, teks gelap */
-        .badge-secondary { background-color: #6c757d; } /* Bootstrap secondary */
-        /* img-thumbnail-pdf tidak lagi digunakan karena foto dihapus */
+        .badge-success { background-color: #198754; }
+        .badge-warning { background-color: #ffc107; color: #212529; }
+        .badge-secondary { background-color: #6c757d; }
+        .badge-primary { background-color: #0d6efd; } /* Ditambahkan untuk status Lembur */
         .footer {
             text-align: center;
             margin-top: 30px;
@@ -99,10 +99,8 @@
         <p>Ringkasan Riwayat Absensi Karyawan</p>
     </div>
 
+    {{-- Info Laporan, asumsi ini laporan untuk banyak pegawai --}}
     <div class="info-section">
-        <p><strong>Nama Pegawai:</strong> {{ $absen->pegawai->nama ?? 'N/A' }}</p> {{-- Asumsi data pegawai bisa diakses dari $absen jika ini laporan single --}}
-        <p><strong>ID Pegawai:</strong> {{ $absen->pegawai->pegawai_id ?? 'N/A' }}</p>
-        <p><strong>Jabatan:</strong> {{ $absen->pegawai->jabatan->nama_jabatan ?? 'N/A' }}</p>
         <p><strong>Periode Laporan:</strong>
             @if(isset($tanggal_awal) && isset($tanggal_akhir))
                 {{ \Carbon\Carbon::parse($tanggal_awal)->translatedFormat('d F Y') }} s/d {{ \Carbon\Carbon::parse($tanggal_akhir)->translatedFormat('d F Y') }}
@@ -115,17 +113,19 @@
     <table>
         <thead>
             <tr>
+                <th>Nama Pegawai</th>
                 <th>Tanggal</th>
                 <th>Jam Datang</th>
                 <th>Jam Pulang</th>
-                <th>Status</th>
+                <th>Status Datang</th>
+                <th>Status Pulang</th>
                 <th>Kegiatan</th>
-                {{-- Kolom Foto Datang dan Foto Pulang dihapus --}}
             </tr>
         </thead>
         <tbody>
-            @forelse ($absensis as $absen_record) {{-- Ubah nama variabel loop agar tidak konflik --}}
+            @forelse ($absensis as $absen_record)
             <tr>
+                <td>{{ $absen_record->pegawai->nama ?? 'N/A' }}</td>
                 <td class="text-center">{{ \Carbon\Carbon::parse($absen_record->tanggal)->translatedFormat('d M Y') }}</td>
                 <td class="text-center">{{ $absen_record->jam_datang ?? '-' }}</td>
                 <td class="text-center">{{ $absen_record->jam_pulang ?? '-' }}</td>
@@ -136,15 +136,29 @@
                         @else badge-secondary
                         @endif
                     ">
-                        {{ $absen_record->status }}
+                        {{ $absen_record->status ?? 'N/A' }}
                     </span>
                 </td>
+                <td class="text-center">
+                    @if($absen_record->status_pulang)
+                    <span class="badge
+                        @if($absen_record->status_pulang === 'Sesuai') badge-success
+                        @elseif($absen_record->status_pulang === 'Pulang Lebih Cepat') badge-warning
+                        @elseif($absen_record->status_pulang === 'Lembur') badge-primary
+                        @else badge-secondary
+                        @endif
+                    ">
+                        {{ $absen_record->status_pulang }}
+                    </span>
+                    @else
+                    -
+                    @endif
+                </td>
                 <td>{{ $absen_record->kegiatan ?? '-' }}</td>
-                {{-- Data Foto Datang dan Foto Pulang dihapus --}}
             </tr>
             @empty
             <tr>
-                <td colspan="5" class="text-center" style="padding: 20px; color: #888;">Tidak ada data absensi untuk periode ini.</td> {{-- Colspan disesuaikan dari 7 menjadi 5 --}}
+                <td colspan="7" class="text-center" style="padding: 20px; color: #888;">Tidak ada data absensi untuk periode ini.</td>
             </tr>
             @endforelse
         </tbody>

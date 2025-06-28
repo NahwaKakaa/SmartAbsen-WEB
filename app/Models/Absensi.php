@@ -8,7 +8,7 @@ class Absensi extends Model
 {
     protected $fillable = [
         'pegawai_id', 'tanggal', 'jam_datang', 'jam_pulang',
-        'foto_datang', 'foto_pulang', 'kegiatan', 'status'
+        'foto_datang', 'foto_pulang', 'kegiatan', 'status', 'status_pulang'
     ];
 
     public function pegawai()

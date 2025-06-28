@@ -17,8 +17,8 @@ class AbsensiController extends Controller
         $pegawai = Auth::guard('pegawai')->user();
         
         $absensiHariIni = Absensi::where('pegawai_id', $pegawai->id)
-                                ->whereDate('tanggal', Carbon::today())
-                                ->first();
+                                    ->whereDate('tanggal', Carbon::today())
+                                    ->first();
 
         $sudahDatang = $absensiHariIni && $absensiHariIni->jam_datang !== null;
         $sudahPulang = $absensiHariIni && $absensiHariIni->jam_pulang !== null;
@@ -29,21 +29,32 @@ class AbsensiController extends Controller
     public function datang(Request $request)
     {
         $pegawai = Auth::guard('pegawai')->user();
+        
         $today = Carbon::today();
         $jamSekarang = Carbon::now();
-
         $jamMasukBatas = Carbon::createFromTime(8, 0, 0);
 
+        // Validasi untuk Base64 string
         $request->validate([
-            'foto_datang' => 'required|image|mimes:jpeg,png,jpg|max:40960',
+            'foto_datang' => 'required|string',
         ]);
 
         try {
             $fotoDatangPath = null;
-            if ($request->hasFile('foto_datang')) {
-                $fotoDatangPath = $request->file('foto_datang')->store('uploads/absensi', 'public');
+            
+            // Logika untuk menyimpan gambar dari Base64
+            $base64Image = $request->input('foto_datang');
+            if (preg_match('/^data:image\/(\w+);base64,/', $base64Image, $type)) {
+                $imageData = substr($base64Image, strpos($base64Image, ',') + 1);
+                $type = strtolower($type[1]);
+                $imageData = base64_decode($imageData);
+                $fileName = 'datang-' . uniqid() . '.' . $type;
+                $path = 'uploads/absensi/' . $fileName;
+
+                Storage::disk('public')->put($path, $imageData);
+                $fotoDatangPath = $path;
             } else {
-                return redirect()->back()->with('error', 'Foto bukti datang wajib diunggah.');
+                return redirect()->back()->with('error', 'Format foto bukti datang tidak valid.');
             }
 
             $statusAbsensi = ($jamSekarang->greaterThan($jamMasukBatas)) ? 'Terlambat' : 'Tepat Waktu';
@@ -60,7 +71,7 @@ class AbsensiController extends Controller
 
         } catch (\Exception $e) {
             Log::error('Error saat absensi datang untuk pegawai ID ' . $pegawai->id . ': ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Terjadi kesalahan saat mencatat absensi datang. Silakan coba lagi. Detail: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Terjadi kesalahan saat mencatat absensi datang. Silakan coba lagi.');
         }
     }
 
@@ -70,37 +81,61 @@ class AbsensiController extends Controller
         $today = Carbon::today();
         $jamSekarang = Carbon::now();
 
+        // Validasi untuk Base64 string dan kegiatan
         $request->validate([
-            'foto_pulang' => 'required|image|mimes:jpeg,png,jpg|max:40960',
+            'foto_pulang' => 'required|string',
             'kegiatan_pulang' => 'required|string|max:500',
         ]);
 
         try {
             $absensiHariIni = Absensi::where('pegawai_id', $pegawai->id)
-                                    ->whereDate('tanggal', $today)
-                                    ->first();
+                                      ->whereDate('tanggal', $today)
+                                      ->first();
             
-            $fotoPulangPath = null;
-            if ($request->hasFile('foto_pulang')) {
-                $fotoPulangPath = $request->file('foto_pulang')->store('uploads/absensi', 'public');
-            } else {
-                return redirect()->back()->with('error', 'Foto bukti pulang wajib diunggah.');
+            if (!$absensiHariIni) {
+                 return redirect()->back()->with('error', 'Absensi datang hari ini tidak ditemukan untuk dicatat pulangnya.');
             }
 
-            if ($absensiHariIni) {
-                $absensiHariIni->update([
-                    'jam_pulang' => $jamSekarang->format('H:i:s'),
-                    'kegiatan' => $request->kegiatan_pulang,
-                    'foto_pulang' => $fotoPulangPath,
-                ]);
-                return redirect()->back()->with('success', 'Absensi pulang berhasil dicatat!');
+            // Logika untuk menyimpan gambar dari Base64
+            $fotoPulangPath = null;
+            $base64Image = $request->input('foto_pulang');
+            if (preg_match('/^data:image\/(\w+);base64,/', $base64Image, $type)) {
+                $imageData = substr($base64Image, strpos($base64Image, ',') + 1);
+                $type = strtolower($type[1]);
+                $imageData = base64_decode($imageData);
+                $fileName = 'pulang-' . uniqid() . '.' . $type;
+                $path = 'uploads/absensi/' . $fileName;
+
+                Storage::disk('public')->put($path, $imageData);
+                $fotoPulangPath = $path;
             } else {
-                return redirect()->back()->with('error', 'Absensi datang hari ini tidak ditemukan untuk dicatat pulangnya.');
+                return redirect()->back()->with('error', 'Format foto bukti pulang tidak valid.');
             }
+
+            // Logika status pulang
+            $jamPulangStandar = Carbon::createFromTimeString('17:00:00');
+            $batasWaktuLembur = $jamPulangStandar->copy()->addMinutes(10);
+            $statusPulang = '';
+            if ($jamSekarang->lessThan($jamPulangStandar)) {
+                $statusPulang = 'Pulang Lebih Cepat';
+            } elseif ($jamSekarang->between($jamPulangStandar, $batasWaktuLembur, true)) {
+                $statusPulang = 'Sesuai';
+            } else {
+                $statusPulang = 'Lembur';
+            }
+
+            $absensiHariIni->update([
+                'jam_pulang' => $jamSekarang->format('H:i:s'),
+                'kegiatan' => $request->kegiatan_pulang,
+                'foto_pulang' => $fotoPulangPath,
+                'status_pulang' => $statusPulang,
+            ]);
+
+            return redirect()->back()->with('success', 'Absensi pulang berhasil dicatat! Status: ' . $statusPulang);
 
         } catch (\Exception $e) {
             Log::error('Error saat absensi pulang untuk pegawai ID ' . $pegawai->id . ': ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Terjadi kesalahan saat mencatat absensi pulang. Silakan coba lagi. Detail: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Terjadi kesalahan saat mencatat absensi pulang. Silakan coba lagi.');
         }
     }
 

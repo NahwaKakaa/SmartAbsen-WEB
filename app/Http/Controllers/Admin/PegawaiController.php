@@ -38,7 +38,7 @@ class PegawaiController extends Controller
             'alamat' => $request->alamat,
             'jenis_kelamin' => $request->jenis_kelamin,
             'jabatan_id' => $request->jabatan_id,
-            'password' => Hash::make('default123'), // password default
+            'password' => Hash::make('default123'),
         ]);
 
         return redirect()->route('admin.pegawai.index')->with('success', 'Pegawai berhasil ditambahkan!');

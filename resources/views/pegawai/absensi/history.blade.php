@@ -42,7 +42,8 @@
                             <th>Tanggal</th>
                             <th>Jam Datang</th>
                             <th>Jam Pulang</th>
-                            <th>Status</th>
+                            <th>Status Datang</th> 
+                            <th>Status Pulang</th>
                             <th class="text-center">Foto Datang</th>
                             <th class="text-center">Foto Pulang</th>
                         </tr>
@@ -60,12 +61,27 @@
                                     @else bg-secondary
                                     @endif
                                 ">
-                                    {{ $absen->status }}
+                                    {{ $absen->status ?? 'N/A' }}
                                 </span>
                             </td>
+                            <td>
+                                @if($absen->status_pulang)
+                                <span class="badge rounded-pill px-3 py-2
+                                    @if($absen->status_pulang === 'Sesuai') bg-success
+                                    @elseif($absen->status_pulang === 'Pulang Lebih Cepat') bg-warning
+                                    @elseif($absen->status_pulang === 'Lembur') bg-primary
+                                    @else bg-secondary
+                                    @endif
+                                ">
+                                    {{ $absen->status_pulang }}
+                                </span>
+                                @else
+                                <span class="text-muted">-</span>
+                                @endif
+                            </td>
+
                             <td class="text-center">
                                 @if($absen->foto_datang)
-                                    {{-- PERBAIKAN DI SINI: Tambahkan 'storage/' --}}
                                     <a href="{{ asset('storage/' . $absen->foto_datang) }}" target="_blank">
                                         <img src="{{ asset('storage/' . $absen->foto_datang) }}" alt="Foto Datang" width="60" class="img-thumbnail rounded shadow-sm">
                                     </a>
@@ -75,7 +91,6 @@
                             </td>
                             <td class="text-center">
                                 @if($absen->foto_pulang)
-                                    {{-- PERBAIKAN DI SINI: Tambahkan 'storage/' --}}
                                     <a href="{{ asset('storage/' . $absen->foto_pulang) }}" target="_blank">
                                         <img src="{{ asset('storage/' . $absen->foto_pulang) }}" alt="Foto Pulang" width="60" class="img-thumbnail rounded shadow-sm">
                                     </a>
@@ -86,7 +101,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="6" class="text-center py-4">
+                            <td colspan="7" class="text-center py-4">
                                 <div class="alert alert-info text-center py-3 shadow-sm rounded-3 mb-0">
                                     <h4 class="alert-heading"><i class="bi bi-info-circle-fill me-2"></i>Belum Ada Data Absensi</h4>
                                     <p class="mb-0">Tidak ada riwayat absensi yang ditemukan untuk Anda atau kriteria filter yang dipilih.</p>

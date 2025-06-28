@@ -6,7 +6,7 @@
 
     {{-- Filter Form --}}
     <div class="card shadow-sm mb-4">
-        <div class="card-header bg-light py-3"> {{-- Gunakan bg-light agar adaptif melalui CSS kustom --}}
+        <div class="card-header bg-light py-3">
             <h5 class="mb-0 fw-bold"><i class="bi bi-funnel-fill me-2"></i>Filter Laporan</h5>
         </div>
         <div class="card-body">
@@ -37,20 +37,20 @@
     @endphp
 
     @forelse($grouped as $tanggal => $list)
-    <div class="card mb-4 shadow-lg"> {{-- shadow-lg untuk bayangan lebih kuat --}}
-        <div class="card-header bg-light fw-bold py-3"> {{-- Gunakan bg-light agar adaptif melalui CSS kustom --}}
+    <div class="card mb-4 shadow-lg">
+        <div class="card-header bg-light fw-bold py-3">
             Tanggal: {{ \Carbon\Carbon::parse($tanggal)->translatedFormat('d F Y') }}
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
-                {{-- Tambahkan kelas table-striped di sini --}}
                 <table class="table table-striped table-bordered table-hover mb-0 align-middle">
-                    <thead> {{-- Hapus table-light agar adaptif --}}
+                    <thead>
                         <tr>
                             <th>Nama</th>
                             <th>Jam Datang</th>
                             <th>Jam Pulang</th>
-                            <th>Status</th>
+                            <th>Status Datang</th>
+                            <th>Status Pulang</th>
                             <th>Kegiatan</th>
                             <th class="text-center">Foto Datang</th>
                             <th class="text-center">Foto Pulang</th>
@@ -69,8 +69,23 @@
                                     @else bg-secondary
                                     @endif
                                 ">
-                                    {{ $absen->status }}
+                                    {{ $absen->status ?? 'N/A' }}
                                 </span>
+                            </td>
+                            <td>
+                                @if($absen->status_pulang)
+                                <span class="badge rounded-pill px-3 py-2
+                                    @if($absen->status_pulang === 'Sesuai') bg-success
+                                    @elseif($absen->status_pulang === 'Pulang Lebih Cepat') bg-warning
+                                    @elseif($absen->status_pulang === 'Lembur') bg-primary
+                                    @else bg-secondary
+                                    @endif
+                                ">
+                                    {{ $absen->status_pulang }}
+                                </span>
+                                @else
+                                <span class="text-muted">-</span>
+                                @endif
                             </td>
                             <td>{{ $absen->kegiatan ?? '-' }}</td>
                             <td class="text-center">
